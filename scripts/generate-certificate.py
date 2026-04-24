@@ -21,12 +21,13 @@ def main():
     import datetime
     completion_date = datetime.date.today().strftime('%B %d, %Y')
 
-    template = Path('scripts/templates/certificate-template.html').read_text()
+    template = Path(__file__).parent.parent / 'templates' / 'certificate-template.html'
+    template = template.read_text()
     cert_html = (template
         .replace('{{STUDENT_NAME}}', student_name)
         .replace('{{COMPLETION_DATE}}', completion_date))
 
-    output = Path('certificate.html')
+    output = Path(__file__).parent.parent / 'certificate.html'
     output.write_text(cert_html)
     print(f"Certificate generated: {output}")
     print("Open certificate.html in your browser and print to PDF.")
