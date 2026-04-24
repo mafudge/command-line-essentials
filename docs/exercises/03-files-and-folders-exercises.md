@@ -219,10 +219,6 @@ mv favorite2.txt favorite2-renamed.txt
 
 **Step 3:** Delete the third file:
 
-> :warning: **This is permanent!**
->
-> When you press Enter on the `rm` command, the file is gone forever. Make sure you have the correct filename before running this!
-
 <details>
 <summary>Windows (PowerShell or Git Bash)</summary>
 

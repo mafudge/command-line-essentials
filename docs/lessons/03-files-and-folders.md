@@ -333,19 +333,7 @@ cd "my folder"
 
 </details>
 
----
-
-## Important Safety Warning
-
-> :warning: **There is NO Recycle Bin in the Terminal!**
->
-> When you delete files using the terminal, they are **permanently deleted**. Unlike deleting files in a graphical interface where you can recover them from the trash, terminal deletions are irreversible.
->
-> **Tips to stay safe:**
-> - Always double-check what you're deleting before pressing Enter
-> - Use `ls` to verify the file exists before deleting
-> - Consider creating a backup before bulk deletions
-> - When using `rm *`, make sure you're in the correct directory!
+> See the warning in the "Deleting Files and Folders" section above.
 
 ---
 
