@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Command Line Essentials — Tip Sheet</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    /* ─── Design Tokens ──────────────────────────────────────────── */
+    :root {
+      --bg:         #070d0f;
+      --surface:    #0d1618;
+      --surface2:   #111e21;
+      --border:     #1a2e33;
+      --green:      #00e87a;
+      --green-dim:  #00a856;
+      --green-glow: rgba(0, 232, 122, 0.18);
+      --blue:       #38bdf8;
+      --amber:      #f59e0b;
+      --red:        #fb7185;
+      --text:       #b8cdd1;
+      --text-dim:   #4d6e74;
+      --text-faint: #2a4147;
+      --mono:       'IBM Plex Mono', monospace;
+      --display:    'Bebas Neue', sans-serif;
+    }
+
+    /* ─── Reset & Base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 11px; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 22px 26px 18px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* scanline atmosphere */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.06) 3px,
+        rgba(0,0,0,0.06) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────────── */
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 12px;
+      border-bottom: 1.5px solid var(--green);
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+
+    header::before {
+      content: '●  ●  ●';
+      position: absolute;
+      top: 0; right: 0;
+      font-size: 8px;
+      color: var(--text-faint);
+      letter-spacing: 3px;
+    }
+
+    .title-block { display: flex; flex-direction: column; gap: 2px; }
+
+    h1 {
+      font-family: var(--display);
+      font-size: 34px;
+      line-height: 1;
+      color: var(--green);
+      text-shadow: 0 0 28px var(--green-glow), 0 0 60px rgba(0,232,122,0.08);
+      letter-spacing: 3px;
+    }
+
+    .tagline {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding-bottom: 2px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .pip {
+      width: 8px; height: 8px;
+      border-radius: 1px;
+    }
+
+    .pip-win  { background: var(--blue);  box-shadow: 0 0 6px rgba(56,189,248,0.5); }
+    .pip-mac  { background: var(--amber); box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+    .pip-lnx  { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+
+    .legend-item.win  { color: var(--blue); }
+    .legend-item.mac  { color: var(--amber); }
+    .legend-item.lnx  { color: var(--green); }
+
+    /* ─── Table ──────────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    /* Column widths */
+    col.col-q   { width: 24%; }
+    col.col-win { width: 25%; }
+    col.col-mac { width: 24%; }
+    col.col-lnx { width: 20%; }
+    col.col-note { width: 7%; }
+
+    thead th {
+      font-size: 8.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      padding: 4px 8px 4px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    thead th.th-q    { color: var(--text-dim); }
+    thead th.th-win  { color: var(--blue); }
+    thead th.th-mac  { color: var(--amber); }
+    thead th.th-lnx  { color: var(--green); }
+    thead th.th-note { color: var(--text-faint); }
+
+    /* ── section header rows ── */
+    tr.sect td {
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 4px 8px;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3.5px;
+      color: var(--green);
+    }
+
+    tr.sect td::before {
+      content: '▸  ';
+      color: var(--green-dim);
+    }
+
+    /* ── data rows ── */
+    tr.row td {
+      padding: 3.5px 8px;
+      border-bottom: 1px solid rgba(26,46,51,0.6);
+      vertical-align: middle;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    tr.row:nth-child(even) td {
+      background: rgba(255,255,255,0.015);
+    }
+
+    tr.row:hover td {
+      background: rgba(0,232,122,0.04);
+    }
+
+    /* question cell */
+    td.q {
+      color: var(--text);
+      font-size: 10px;
+    }
+
+    td.q em {
+      font-style: italic;
+      color: var(--text-dim);
+    }
+
+    /* command cells */
+    td.win, td.mac, td.lnx {
+      font-size: 10px;
+    }
+
+    td.win code { color: var(--blue);  }
+    td.mac code { color: var(--amber); }
+    td.lnx code { color: var(--green); }
+
+    /* shared/same command (show in neutral) */
+    td.shared code { color: #8fb8bf; }
+
+    code {
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .arg {
+      font-style: italic;
+      opacity: 0.75;
+    }
+
+    /* note cell */
+    td.note {
+      color: var(--text-faint);
+      font-size: 8.5px;
+      font-style: italic;
+      line-height: 1.3;
+    }
+
+    /* same-on-all indicator */
+    .all-badge {
+      display: inline-block;
+      font-size: 7.5px;
+      padding: 1px 4px;
+      border: 1px solid var(--text-faint);
+      border-radius: 2px;
+      color: var(--text-faint);
+      letter-spacing: 0.5px;
+      vertical-align: middle;
+    }
+
+    /* ─── Footer ─────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 12px;
+      padding-top: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8.5px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    footer .shortcuts {
+      display: flex;
+      gap: 18px;
+    }
+
+    footer .shortcuts span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    kbd {
+      font-family: var(--mono);
+      font-size: 8px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1px 4px;
+      color: var(--text);
+    }
+
+    /* ─── Print ──────────────────────────────────────────────────── */
+    @media print {
+      :root {
+        --bg: #ffffff;
+        --surface: #f5f5f5;
+        --surface2: #eeeeee;
+        --border: #d0d0d0;
+        --green: #007a40;
+        --green-dim: #005c2e;
+        --green-glow: transparent;
+        --blue: #0066aa;
+        --amber: #b07000;
+        --red: #cc3344;
+        --text: #111111;
+        --text-dim: #555555;
+        --text-faint: #999999;
+      }
+
+      html { font-size: 9.5px; }
+
+      body {
+        background: white;
+        color: black;
+        padding: 10mm 12mm 8mm;
+      }
+
+      body::after { display: none; }
+
+      header { border-bottom-color: #007a40; }
+
+      h1 {
+        color: #007a40;
+        text-shadow: none;
+        font-size: 30px;
+      }
+
+      header::before { display: none; }
+
+      tr.row:hover td { background: transparent; }
+
+      @page {
+        size: letter landscape;
+        margin: 8mm 10mm;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════ HEADER -->
+  <header>
+    <div class="title-block">
+      <h1>Command Line Essentials</h1>
+      <p class="tagline">Quick Reference  ·  Windows  /  macOS  /  Linux</p>
+    </div>
+    <div class="legend">
+      <div class="legend-item win"><span class="pip pip-win"></span>Windows (PowerShell)</div>
+      <div class="legend-item mac"><span class="pip pip-mac"></span>macOS (Terminal)</div>
+      <div class="legend-item lnx"><span class="pip pip-lnx"></span>Linux (Bash)</div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════ TABLE -->
+  <table>
+    <colgroup>
+      <col class="col-q">
+      <col class="col-win">
+      <col class="col-mac">
+      <col class="col-lnx">
+      <col class="col-note">
+    </colgroup>
+    <thead>
+      <tr>
+        <th class="th-q">How do I…</th>
+        <th class="th-win">⊞ Windows (PowerShell)</th>
+        <th class="th-mac">⌘ macOS (Terminal)</th>
+        <th class="th-lnx">$ Linux (Bash)</th>
+        <th class="th-note">Note</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- ──────────── SECTION: TERMINAL BASICS ──────────── -->
+      <tr class="sect"><td colspan="5">Terminal Basics</td></tr>
+
+      <tr class="row">
+        <td class="q">Open the terminal</td>
+        <td class="win"><kbd>Win</kbd>+<kbd>S</kbd> → type <em>PowerShell</em><br>or <kbd>Win</kbd>+<kbd>R</kbd> → <code>powershell</code></td>
+        <td class="mac"><kbd>⌘</kbd>+<kbd>Space</kbd> → type <em>Terminal</em><br>or Applications → Utilities</td>
+        <td class="lnx"><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>T</kbd><br>or search <em>Terminal</em> in apps</td>
+        <td class="note">start here!</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Print text to the screen</td>
+        <td class="win"><code>echo "Hello, World!"</code></td>
+        <td class="mac"><code>echo "Hello, World!"</code></td>
+        <td class="lnx"><code>echo "Hello, World!"</code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Display my username</td>
+        <td class="win"><code>echo $env:USERNAME</code></td>
+        <td class="mac"><code>whoami</code></td>
+        <td class="lnx"><code>whoami</code></td>
+        <td class="note"></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Clear the terminal screen</td>
+        <td class="win"><code>cls</code></td>
+        <td class="mac"><code>clear</code></td>
+        <td class="lnx"><code>clear</code></td>
+        <td class="note">or <kbd>Ctrl+L</kbd></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Cancel a running command</td>
+        <td class="win"><kbd>Ctrl</kbd> + <kbd>C</kbd></td>
+        <td class="mac"><kbd>Ctrl</kbd> + <kbd>C</kbd></td>
+        <td class="lnx"><kbd>Ctrl</kbd> + <kbd>C</kbd></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Auto-complete a name</td>
+        <td class="win"><kbd>Tab</kbd></td>
+        <td class="mac"><kbd>Tab</kbd></td>
+        <td class="lnx"><kbd>Tab</kbd></td>
+        <td class="note">press twice to see options</td>
+      </tr>
+
+      <!-- ──────────── SECTION: NAVIGATION ──────────── -->
+      <tr class="sect"><td colspan="5">Navigation</td></tr>
+
+      <tr class="row">
+        <td class="q">See where I am (current folder)</td>
+        <td class="win"><code>cd</code></td>
+        <td class="mac"><code>pwd</code></td>
+        <td class="lnx"><code>pwd</code></td>
+        <td class="note">print working directory</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">List files in current folder</td>
+        <td class="win"><code>dir</code></td>
+        <td class="mac"><code>ls</code></td>
+        <td class="lnx"><code>ls</code></td>
+        <td class="note"></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">List files with details</td>
+        <td class="win"><code>dir</code></td>
+        <td class="mac"><code>ls -l</code></td>
+        <td class="lnx"><code>ls -l</code></td>
+        <td class="note">size, date, permissions</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Show hidden files too</td>
+        <td class="win"><code>dir /a</code></td>
+        <td class="mac"><code>ls -a</code></td>
+        <td class="lnx"><code>ls -a</code></td>
+        <td class="note">hidden files start with <code>.</code></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">List with details + hidden files</td>
+        <td class="win"><code>dir /a</code></td>
+        <td class="mac"><code>ls -la</code></td>
+        <td class="lnx"><code>ls -la</code></td>
+        <td class="note"></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Go into a folder</td>
+        <td class="win"><code>cd <span class="arg">FolderName</span></code></td>
+        <td class="mac"><code>cd <span class="arg">FolderName</span></code></td>
+        <td class="lnx"><code>cd <span class="arg">FolderName</span></code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Go up one level (to parent)</td>
+        <td class="win"><code>cd ..</code></td>
+        <td class="mac"><code>cd ..</code></td>
+        <td class="lnx"><code>cd ..</code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Go up two levels</td>
+        <td class="win"><code>cd ..\..</code></td>
+        <td class="mac"><code>cd ../..</code></td>
+        <td class="lnx"><code>cd ../..</code></td>
+        <td class="note"><code>\</code> vs <code>/</code> separator</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Go to my home folder</td>
+        <td class="win"><code>cd $env:USERPROFILE</code><br><em>or</em> <code>cd ~</code></td>
+        <td class="mac"><code>cd ~</code></td>
+        <td class="lnx"><code>cd ~</code></td>
+        <td class="note"><code>~</code> = home shortcut</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Navigate using an absolute path</td>
+        <td class="win"><code>cd C:\Users\<span class="arg">name</span>\Documents</code></td>
+        <td class="mac"><code>cd /Users/<span class="arg">name</span>/Documents</code></td>
+        <td class="lnx"><code>cd /home/<span class="arg">name</span>/Documents</code></td>
+        <td class="note">full path from root</td>
+      </tr>
+
+      <!-- ──────────── SECTION: FILES & FOLDERS ──────────── -->
+      <tr class="sect"><td colspan="5">Files &amp; Folders</td></tr>
+
+      <tr class="row">
+        <td class="q">Create a new folder</td>
+        <td class="win"><code>mkdir <span class="arg">FolderName</span></code></td>
+        <td class="mac"><code>mkdir <span class="arg">FolderName</span></code></td>
+        <td class="lnx"><code>mkdir <span class="arg">FolderName</span></code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Create multiple folders at once</td>
+        <td class="win"><code>mkdir <span class="arg">a</span>, <span class="arg">b</span>, <span class="arg">c</span></code></td>
+        <td class="mac"><code>mkdir <span class="arg">a</span> <span class="arg">b</span> <span class="arg">c</span></code></td>
+        <td class="lnx"><code>mkdir <span class="arg">a</span> <span class="arg">b</span> <span class="arg">c</span></code></td>
+        <td class="note">space-separated on Mac/Linux</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Create an empty file</td>
+        <td class="win"><code>type nul &gt; <span class="arg">file.txt</span></code></td>
+        <td class="mac"><code>touch <span class="arg">file.txt</span></code></td>
+        <td class="lnx"><code>touch <span class="arg">file.txt</span></code></td>
+        <td class="note">Git Bash on Windows: use <code>touch</code></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Write text to a file</td>
+        <td class="win"><code>echo "<span class="arg">text</span>" &gt; <span class="arg">file.txt</span></code></td>
+        <td class="mac"><code>echo "<span class="arg">text</span>" &gt; <span class="arg">file.txt</span></code></td>
+        <td class="lnx"><code>echo "<span class="arg">text</span>" &gt; <span class="arg">file.txt</span></code></td>
+        <td class="note"><code>&gt;</code> overwrites; <code>&gt;&gt;</code> appends</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Read / display a file</td>
+        <td class="win"><code>cat <span class="arg">file.txt</span></code></td>
+        <td class="mac"><code>cat <span class="arg">file.txt</span></code></td>
+        <td class="lnx"><code>cat <span class="arg">file.txt</span></code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Copy a file</td>
+        <td class="win"><code>cp <span class="arg">src.txt</span> <span class="arg">dest.txt</span></code></td>
+        <td class="mac"><code>cp <span class="arg">src.txt</span> <span class="arg">dest.txt</span></code></td>
+        <td class="lnx"><code>cp <span class="arg">src.txt</span> <span class="arg">dest.txt</span></code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Move or rename a file/folder</td>
+        <td class="win"><code>mv <span class="arg">old</span> <span class="arg">new</span></code></td>
+        <td class="mac"><code>mv <span class="arg">old</span> <span class="arg">new</span></code></td>
+        <td class="lnx"><code>mv <span class="arg">old</span> <span class="arg">new</span></code></td>
+        <td class="note">same command for both actions</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Move a file into a folder</td>
+        <td class="win"><code>mv <span class="arg">file.txt</span> <span class="arg">folder/</span></code></td>
+        <td class="mac"><code>mv <span class="arg">file.txt</span> <span class="arg">folder/</span></code></td>
+        <td class="lnx"><code>mv <span class="arg">file.txt</span> <span class="arg">folder/</span></code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Delete a file</td>
+        <td class="win"><code>rm <span class="arg">file.txt</span></code></td>
+        <td class="mac"><code>rm <span class="arg">file.txt</span></code></td>
+        <td class="lnx"><code>rm <span class="arg">file.txt</span></code></td>
+        <td class="note">permanent — no recycle bin!</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Delete an empty folder</td>
+        <td class="win"><code>rmdir <span class="arg">FolderName</span></code></td>
+        <td class="mac"><code>rmdir <span class="arg">FolderName</span></code></td>
+        <td class="lnx"><code>rmdir <span class="arg">FolderName</span></code></td>
+        <td class="note">same on all</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">List a folder's contents recursively</td>
+        <td class="win"><code>ls -R <span class="arg">folder</span></code></td>
+        <td class="mac"><code>ls -R <span class="arg">folder</span></code></td>
+        <td class="lnx"><code>ls -R <span class="arg">folder</span></code></td>
+        <td class="note">shows all nested files</td>
+      </tr>
+
+      <!-- ──────────── SECTION: GUI INTEGRATION ──────────── -->
+      <tr class="sect"><td colspan="5">Open in Graphical File Manager</td></tr>
+
+      <tr class="row">
+        <td class="q">Open current folder in the GUI</td>
+        <td class="win"><code>explorer .</code></td>
+        <td class="mac"><code>open .</code></td>
+        <td class="lnx"><code>xdg-open .</code></td>
+        <td class="note"><code>.</code> = current directory</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Open a specific folder in the GUI</td>
+        <td class="win"><code>explorer <span class="arg">C:\path\to\folder</span></code></td>
+        <td class="mac"><code>open <span class="arg">~/Documents</span></code></td>
+        <td class="lnx"><code>xdg-open <span class="arg">~/Documents</span></code></td>
+        <td class="note"></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Open a terminal <em>from</em> the GUI</td>
+        <td class="win">Right-click folder → <em>Open in Terminal</em></td>
+        <td class="mac">Services → <em>New Terminal at Folder</em></td>
+        <td class="lnx">Right-click → <em>Open in Terminal</em></td>
+        <td class="note">or <kbd>Ctrl+Alt+T</kbd> on Linux</td>
+      </tr>
+
+      <!-- ──────────── SECTION: PATH TIPS ──────────── -->
+      <tr class="sect"><td colspan="5">Path Tips &amp; Naming Rules</td></tr>
+
+      <tr class="row">
+        <td class="q">Refer to my home folder</td>
+        <td class="win"><code>~</code> &nbsp;<em>or</em>&nbsp; <code>$env:USERPROFILE</code></td>
+        <td class="mac"><code>~</code></td>
+        <td class="lnx"><code>~</code></td>
+        <td class="note">e.g. <code>cd ~</code> or <code>ls ~/Documents</code></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Refer to current folder</td>
+        <td class="win"><code>.</code></td>
+        <td class="mac"><code>.</code></td>
+        <td class="lnx"><code>.</code></td>
+        <td class="note">a single dot</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Refer to parent folder</td>
+        <td class="win"><code>..</code></td>
+        <td class="mac"><code>..</code></td>
+        <td class="lnx"><code>..</code></td>
+        <td class="note">two dots</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Use a path with spaces in the name</td>
+        <td class="win"><code>cd "My Documents"</code></td>
+        <td class="mac"><code>cd "My Documents"</code></td>
+        <td class="lnx"><code>cd "My Documents"</code></td>
+        <td class="note">wrap in quotes or escape with <code>\</code></td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Path separator character</td>
+        <td class="win"><code>\</code> &nbsp;<em>(backslash)</em></td>
+        <td class="mac"><code>/</code> &nbsp;<em>(forward slash)</em></td>
+        <td class="lnx"><code>/</code> &nbsp;<em>(forward slash)</em></td>
+        <td class="note">Windows also accepts <code>/</code> in many cases</td>
+      </tr>
+
+      <tr class="row">
+        <td class="q">Avoid these characters in names</td>
+        <td class="win" colspan="3" style="color:var(--red)"><code style="color:var(--red)">/ \ : * ? " &lt; &gt; |</code> &nbsp;— also avoid spaces when possible</td>
+        <td class="note">use <code>-</code> or <code>_</code> instead</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <!-- ═══════════════════════════════════════════════════════════════ FOOTER -->
+  <footer>
+    <div class="shortcuts">
+      <span>Useful shortcuts:</span>
+      <span><kbd>↑</kbd> previous command</span>
+      <span><kbd>Tab</kbd> auto-complete</span>
+      <span><kbd>Ctrl</kbd>+<kbd>C</kbd> cancel</span>
+      <span><kbd>Ctrl</kbd>+<kbd>L</kbd> clear screen</span>
+    </div>
+    <div>Command Line Essentials  ·  iSchool  ·  <em>italics</em> = replace with your value</div>
+  </footer>
+
+</body>
+</html>
