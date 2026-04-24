@@ -11,7 +11,9 @@ if [ -z "$STUDENT_NAME" ]; then
   exit 1
 fi
 
-sed -e "s/{{STUDENT_NAME}}/$STUDENT_NAME/g" \
+STUDENT_NAME_ESCAPED=$(echo "$STUDENT_NAME" | sed 's/[\/&]/\\&/g')
+
+sed -e "s/{{STUDENT_NAME}}/$STUDENT_NAME_ESCAPED/g" \
     -e "s/{{COMPLETION_DATE}}/$COMPLETION_DATE/g" \
     -e "s/{{COURSE_NAME}}/$COURSE_NAME/g" \
     scripts/templates/badge-template.svg > badge.svg
