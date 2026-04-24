@@ -1,0 +1,26 @@
+name: Verify Lesson Content
+
+on:
+  push:
+    paths:
+      - 'docs/lessons/**'
+      - 'docs/exercises/**'
+      - 'docs/hints/**'
+      - 'scripts/verify.sh'
+
+jobs:
+  verify-content:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for broken links
+        run: |
+          echo "Checking lesson files..."
+          # Verify all expected lesson files exist
+          for i in 01 02 03 04 05; do
+            if [ ! -f "docs/lessons/${i}-*.md" ]; then
+              echo "Missing lesson file: docs/lessons/${i}-*.md"
+              exit 1
+            fi
+          done
+          echo "All 5 lesson files present."

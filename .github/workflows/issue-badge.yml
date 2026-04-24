@@ -1,0 +1,35 @@
+name: Issue Badge and Certificate
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  verify-and-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Verify all lessons
+        run: |
+          chmod +x scripts/verify.sh
+          bash scripts/verify.sh 01
+          bash scripts/verify.sh 02
+          bash scripts/verify.sh 03
+          bash scripts/verify.sh 04
+          bash scripts/verify.sh 05
+          
+      - name: Generate badge
+        run: bash scripts/generate-badge.sh
+        
+      - name: Generate certificate
+        run: python scripts/generate-certificate.py
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: badge-and-certificate
+          path: |
+            badge.svg
+            certificate.html
